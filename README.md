@@ -22,7 +22,18 @@
 5. 브라우저에서 아래 주소가 열리는지 확인하고, **GitHub 아이디를 알려 주세요** (앱에 넣고 APK 를 다시 만듭니다)
    `https://cdn.jsdelivr.net/gh/<GitHub아이디>/kaiun-loto-data@main/data/loto6.json`
 
-## 추첨 후: 한 줄 추가 (1분)
+## 추첨 후: 자동 입력
+
+추첨 다음 날(화·금·토) 일본 시간 10:00 / 12:00 / 18:00 에 Actions 가 자동으로 실행됩니다.
+
+1. `scripts/fetch-upstream.js` 가 공개 저장소 [tank1159jhs/jp-lottery-api](https://github.com/tank1159jhs/jp-lottery-api) (MIT) 의 최신 당첨번호 JSON 을 읽어, 아직 없는 회차를 `input/*.csv` 에 덧붙입니다
+   - 개수·범위·중복·추첨 요일이 맞지 않거나 회차가 이어지지 않으면 넣지 않습니다
+2. 평소처럼 검사 → `data/*.json` 생성 → 커밋 → jsDelivr 캐시 비우기
+3. 12:00 이후 실행에서도 빠진 회차가 있으면 Actions 가 실패하고 GitHub 가 메일을 보냅니다 → 그때는 아래처럼 손으로 한 줄 추가
+
+Actions 탭 → `update-loto` → `Run workflow` 로 언제든 바로 실행할 수도 있습니다.
+
+## 손으로 한 줄 추가 (자동 입력이 안 됐을 때, 1분)
 
 | 게임 | 추첨 | 입력 |
 |---|---|---|

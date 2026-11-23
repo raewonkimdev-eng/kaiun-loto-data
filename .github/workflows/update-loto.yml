@@ -5,11 +5,14 @@ on:
   push:
     branches: [main]
     paths: ['input/**', 'scripts/**', '.github/workflows/**']
-  # Actions 탭에서 손으로 실행
+  # Actions 탭에서 손으로 실행 (자동 가져오기도 함께 실행)
   workflow_dispatch:
-  # 입력 깜빡 알림: 화·금·토 12:00 (일본 시간) 에 빠진 회차가 있으면 실패 → GitHub 가 메일로 알려 준다
+  # 추첨 다음 날 자동 가져오기: 화(월 추첨)·금(목 추첨)·토(금 추첨) 일본 시간 10:00, 12:00, 18:00
+  # 12:00 이후 실행에서 여전히 빠진 회차가 있으면 실패 → GitHub 가 메일로 알려 준다
   schedule:
+    - cron: '0 1 * * 2,5,6'
     - cron: '0 3 * * 2,5,6'
+    - cron: '0 9 * * 2,5,6'
 
 permissions:
   contents: write
@@ -28,20 +31,25 @@ jobs:
         with:
           node-version: 20
 
+      # 공개 저장소 tank1159jhs/jp-lottery-api 의 최신 당첨번호 JSON 에서 아직 없는 회차를 input/*.csv 에 추가
+      - name: Fetch new rounds
+        if: github.event_name != 'push'
+        run: node scripts/fetch-upstream.js
+
       # 번호 개수·범위·중복·회차 순서 검사. 틀리면 여기서 멈추고 data/*.json 은 그대로 둔다
       - name: Validate and build JSON
         run: node scripts/build.js
 
-      - name: Commit only if data changed
+      - name: Commit only if something changed
         id: commit
         run: |
-          if git diff --quiet -- data && [ -z "$(git status --porcelain -- data)" ]; then
+          if [ -z "$(git status --porcelain -- input data)" ]; then
             echo "no change"; echo "changed=false" >> "$GITHUB_OUTPUT"; exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data
-          git commit -m "data: update winning numbers"
+          git add input data
+          git commit -m "data: add new winning numbers"
           git push
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
